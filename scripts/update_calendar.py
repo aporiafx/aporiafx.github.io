@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Fetch this week's Forex Factory calendar and store it for the site.
 
-Writes (only when the events changed):
+Writes (when the events changed, or always when FORCE=1):
   data/calendar.json          current week, read by every page
   data/weeks/<sunday>.json    archive copy, used by "Tuần trước"
   data/weeks/index.json       list of archived weeks (newest first, at most 104)
 
-Runs hourly from .github/workflows/cap-nhat-lich.yml. Standard library only.
-Forex Factory asks for at most 2 requests per 5 minutes, so the script makes one request
-and, on failure, waits 2 minutes before a single retry.
+Runs from .github/workflows/cap-nhat-lich.yml about every 5 minutes, plus a forced
+refresh of the whole week at 06:00 Monday Vietnam time. Standard library only.
+Forex Factory asks for at most 2 requests per 5 minutes, so each run makes exactly one
+request; when it fails, the stored calendar stays and the next run tries again.
 """
 import datetime
 import json
@@ -37,19 +38,16 @@ def output(name, value):
 
 
 def fetch():
-    req = urllib.request.Request(URL, headers={"User-Agent": "aporia-calendar/1.0 (+https://github.com)", "Accept": "application/json"})
-    for attempt in (1, 2):
-        try:
-            with urllib.request.urlopen(req, timeout=40) as r:
-                data = json.loads(r.read().decode("utf-8"))
-            if isinstance(data, list) and data:
-                return data
-            raise ValueError("dữ liệu trống hoặc sai định dạng")
-        except (urllib.error.URLError, ValueError, json.JSONDecodeError, TimeoutError) as e:
-            print(f"::warning::Lần {attempt}: không tải được lịch Forex Factory ({e})")
-            if attempt == 1:
-                time.sleep(120)
-    return None
+    req = urllib.request.Request(URL, headers={"User-Agent": "aporia-calendar/1.1 (+https://github.com/ledung-lang/aporia)", "Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=40) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        if isinstance(data, list) and data:
+            return data
+        raise ValueError("dữ liệu trống hoặc sai định dạng")
+    except (urllib.error.URLError, ValueError, json.JSONDecodeError, TimeoutError) as e:
+        print(f"::warning::Không tải được lịch Forex Factory ({e}), giữ nguyên lịch cũ.")
+        return None
 
 
 def normalize(raw):
@@ -110,10 +108,10 @@ def write_json(path, obj):
 
 
 def main():
+    force = os.environ.get("FORCE") == "1"
     raw = fetch()
     if raw is None:
         output("changed", "false")
-        print("Giữ nguyên lịch cũ.")
         return 0
     events = normalize(raw)
     if not events:
@@ -122,7 +120,7 @@ def main():
         return 0
     week = week_of(events)
     current = read_json(os.path.join(DATA, "calendar.json"), {})
-    if current.get("week") == week and current.get("events") == events:
+    if not force and current.get("week") == week and current.get("events") == events:
         print(f"Không có thay đổi (tuần {week}, {len(events)} tin).")
         output("changed", "false")
         return 0
@@ -132,7 +130,7 @@ def main():
     idx = read_json(os.path.join(DATA, "weeks", "index.json"), [])
     idx = sorted({w for w in idx if isinstance(w, str)} | {week}, reverse=True)[:104]
     write_json(os.path.join(DATA, "weeks", "index.json"), idx)
-    print(f"Đã cập nhật lịch tuần {week}: {len(events)} tin.")
+    print(f"{'Nạp lại' if force else 'Đã cập nhật'} lịch tuần {week}: {len(events)} tin.")
     output("changed", "true")
     return 0
 
