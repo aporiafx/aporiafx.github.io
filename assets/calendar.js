@@ -202,7 +202,7 @@
       + (e.tentative ? '<span class="bdg tent" title="Giờ chưa cố định">giờ dự kiến</span>' : "");
     const isOpen = open.has(e.id);
     return '<div class="cr' + (past ? " past" : "") + (zone ? " zone" : "") + (e.impact === "holiday" ? " hol" : "") + '" role="button" tabindex="0" data-id="' + e.id + '" aria-expanded="' + isOpen + '" aria-controls="d-' + e.id + '">'
-      + '<span class="tm' + (e.tentative ? " tent" : "") + '">' + tm + (left ? '<span class="left">' + left + "</span>" : "") + "</span>"
+      + '<span class="tm' + (e.tentative ? " tent" : "") + (e.allDay ? " ad" : "") + '">' + tm + (left ? '<span class="left">' + left + "</span>" : "") + "</span>"
       + '<span class="ccy">' + e.ccy + "</span>"
       + ib(e.impact)
       + '<span class="ev"><b>' + esc(e.vn || e.title) + "</b>" + badges + (e.vn && e.vn !== e.title ? '<span class="og">' + esc(e.title) + "</span>" : "") + "</span>"
