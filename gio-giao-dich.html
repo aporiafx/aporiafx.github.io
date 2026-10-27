@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Giờ giao dịch theo giờ Việt Nam · Aporia</title>
+<meta name="description" content="Bản đồ phiên Sydney, Tokyo, London, New York và khung giờ nên, không nên vào lệnh cho vàng, dầu, forex theo giờ Việt Nam.">
+<meta name="theme-color" content="#090b0e">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="Giờ giao dịch theo giờ Việt Nam · Aporia">
+<meta property="og:description" content="Bản đồ phiên Sydney, Tokyo, London, New York và khung giờ nên, không nên vào lệnh cho vàng, dầu, forex theo giờ Việt Nam.">
+<meta property="og:type" content="website">
+<meta name="apple-mobile-web-app-title" content="Aporia">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/app.css?v=202610261627">
+</head>
+<body data-page="gio">
+<header class="top" id="top"><div class="tb"><a class="brand" href="./"><span class="wm">APORIA</span></a></div></header>
+<div class="ticker" id="ticker"></div>
+<main class="wrap">
+  <div class="ptitle"><h1>Giờ giao dịch</h1><span class="sub">Phiên thị trường, khung nên và không nên vào lệnh cho từng mã, theo giờ Việt Nam · tự đổi theo giờ mùa hè/đông</span></div>
+  <section class="panel" id="gio">
+    <div class="ph">
+      <h2>Bản đồ giờ giao dịch</h2>
+      <span class="sub" id="calNote"></span>
+      <div class="right daynav">
+        <button class="btn sm" id="dPrev" type="button" aria-label="Ngày trước">‹</button>
+        <span class="dl" id="dLab">Hôm nay</span>
+        <button class="btn sm" id="dNext" type="button" aria-label="Ngày sau">›</button>
+        <button class="btn sm" id="dToday" type="button">Hôm nay</button>
+      </div>
+    </div>
+    <div class="nowgrid">
+      <div class="now">
+        <div class="lab"><span class="dot" id="nowDot"></span><span id="nowLab">—</span></div>
+        <div class="desc" id="nowDesc"></div>
+        <div class="nx" id="nowNx"></div>
+      </div>
+      <div>
+        <div class="tags" id="openTags"></div>
+        <div class="dst" id="dst"></div>
+      </div>
+    </div>
+    <div class="mapwrap" id="mapwrap">
+      <div class="map" id="map"></div>
+      <div class="xh" id="xh" hidden></div>
+      <div class="xr" id="xr" hidden></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--best)"></i>Tốt nhất</span>
+      <span><i style="background:var(--good)"></i>Tốt</span>
+      <span><i style="background:var(--lim)"></i>Hạn chế</span>
+      <span><i style="background:var(--avoid)"></i>Tránh: mở cửa, tin, rollover</span>
+      <span><i style="background:repeating-linear-gradient(45deg,#d1323b 0 3px,#821d23 3px 6px)"></i>Tin đỏ trong lịch ±15 phút</span>
+      <span><i style="background:#7a5a17"></i>Tin cam</span>
+      <span><i style="background:repeating-linear-gradient(45deg,#16191e 0 3px,#2d343c 3px 6px)"></i>Nghỉ / đóng cửa</span>
+      <span><i style="background:linear-gradient(to right,transparent 5px,#dce2ea 5px,#dce2ea 7px,transparent 7px)"></i>Giờ ra tin thường lệ</span>
+      <span><i style="background:#3fcf8e;width:8px;height:8px;border-radius:50%;vertical-align:0"></i>Chấm cạnh mã: trạng thái lúc này</span>
+    </div>
+  </section>
+  <section class="panel" id="kn">
+    <div class="ph"><h2><span id="knTitle">Kiến nghị giờ giao dịch</span></h2><span class="sub">theo ngày đang xem ở bản đồ</span></div>
+    <p class="kn-intro">Khung giờ tính theo giờ địa phương của từng sàn rồi đổi sang giờ Việt Nam, nên tự đúng khi các nơi đổi giờ mùa hè/đông. <b>Tốt nhất</b>: thanh khoản và xu hướng rõ nhất, ưu tiên setup A/B. <b>Tốt</b>: vào lệnh được khi setup đủ điều kiện. Ngoài các khung này là <b>Hạn chế</b>: chỉ setup C, giảm khối lượng.</p>
+    <div class="common" id="common" hidden></div>
+    <div class="rt-wrap" id="rtWrap"></div>
+  </section>
+</main>
+<footer class="foot" id="foot"></footer>
+<noscript><div class="wrap"><div class="warnbox">Trang cần bật JavaScript để hiển thị lịch tin, đồng hồ và giá.</div></div></noscript>
+<script src="assets/core.js?v=202610261627"></script>
+<script src="assets/hours.js?v=202610261627"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lịch tin kinh tế theo giờ Việt Nam · Aporia</title>
+<meta name="description" content="Lịch tin kinh tế tuần theo giờ Việt Nam: tin đỏ, tin vàng, dự báo, kỳ trước, giải thích tiếng Việt cho từng tin.">
+<meta name="theme-color" content="#090b0e">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="Lịch tin kinh tế theo giờ Việt Nam · Aporia">
+<meta property="og:description" content="Lịch tin kinh tế tuần theo giờ Việt Nam: tin đỏ, tin vàng, dự báo, kỳ trước, giải thích tiếng Việt cho từng tin.">
+<meta property="og:type" content="website">
+<meta name="apple-mobile-web-app-title" content="Aporia">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/app.css?v=202610261627">
+</head>
+<body data-page="lich">
+<header class="top" id="top"><div class="tb"><a class="brand" href="./"><span class="wm">APORIA</span></a></div></header>
+<div class="ticker" id="ticker"></div>
+<main class="wrap">
+  <div class="ptitle"><h1>Lịch tin kinh tế</h1><span class="sub">Theo giờ Việt Nam · USD, EUR, GBP, JPY, AUD · dữ liệu Forex Factory, cập nhật mỗi giờ</span></div>
+  <section class="panel">
+    <div class="tabs" role="tablist" aria-label="Chế độ xem lịch">
+      <button type="button" role="tab" id="tabWeek" aria-selected="true" aria-controls="paneWeek">Lịch tuần</button>
+      <button type="button" role="tab" id="tabLive" aria-selected="false" aria-controls="paneLive">Kết quả trực tiếp</button>
+    </div>
+    <div id="paneWeek" role="tabpanel" aria-labelledby="tabWeek">
+      <div class="calbar">
+        <button type="button" class="btn sm" id="wPrev" aria-label="Tuần trước">‹<span class="t"> Tuần trước</span></button>
+        <span class="wk" id="wLab">—</span>
+        <button type="button" class="btn sm" id="wNext" aria-label="Tuần sau"><span class="t">Tuần sau </span>›</button>
+        <button type="button" class="btn sm ftog" id="fToggle" aria-expanded="false" aria-controls="filters">Bộ lọc</button>
+        <span class="sp"></span>
+        <div id="fScope" role="group" aria-label="Phạm vi ngày" style="display:flex;gap:4px">
+          <button type="button" class="chip" data-v="today">Hôm nay</button>
+          <button type="button" class="chip" data-v="tomorrow">Ngày mai</button>
+          <button type="button" class="chip" data-v="week">Cả tuần</button>
+        </div>
+      </div>
+      <div class="filters" id="filters">
+        <div class="grp"><span class="lbl">Mức độ</span><span id="fImp" class="grp"></span></div>
+        <div class="grp"><span class="lbl">Tiền tệ</span><span id="fCcy" class="grp"></span></div>
+        <div class="grp"><span class="lbl">Nhóm</span><span id="fGrp" class="grp"></span></div>
+        <label class="grp" style="font-size:12.5px;color:var(--dim);cursor:pointer"><input type="checkbox" id="fUp"> Chỉ tin sắp tới</label>
+        <input type="search" id="fQ" placeholder="Tìm tin: CPI, Fed, NFP…" aria-label="Tìm tin">
+        <button type="button" class="btn sm" id="fReset">Bỏ lọc</button>
+      </div>
+      <div class="srcline" id="srcLine"></div>
+      <div class="ct" id="ct"><div class="empty">Đang tải lịch…</div></div>
+      <div class="note">Mức độ theo Forex Factory: ba vạch đỏ là tin tác động cao, hai vạch cam là tác động vừa, một vạch là tác động thấp. Nhãn <b>VÀNG</b> đánh dấu tin Mỹ làm giá vàng biến động mạnh (NFP, CPI, PCE, GDP, Fed, việc làm…). Nhãn <b>giờ dự kiến</b> là tin chưa có giờ cố định. Số liệu thực tế (Actual) xem ở tab “Kết quả trực tiếp”.</div>
+    </div>
+    <div id="paneLive" role="tabpanel" aria-labelledby="tabLive" hidden>
+      <div class="note" style="padding-bottom:0">Số liệu thực tế cập nhật ngay khi công bố, theo dữ liệu của TradingView: tin tác động vừa và cao của Mỹ, khối euro, Anh, Nhật, Úc.</div>
+      <div class="tvbox" id="tvCal" style="height:min(78vh,720px)"></div>
+    </div>
+  </section>
+</main>
+<footer class="foot" id="foot"></footer>
+<noscript><div class="wrap"><div class="warnbox">Trang cần bật JavaScript để hiển thị lịch tin, đồng hồ và giá.</div></div></noscript>
+<script src="assets/core.js?v=202610261627"></script>
+<script src="assets/calendar.js?v=202610261627"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Không tìm thấy trang · Aporia</title>
+<meta name="color-scheme" content="dark">
+<style>
+  :root{color-scheme:dark}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#090b0e;color:#e7e3d9;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px))}
+  main{max-width:420px;text-align:center}
+  h1{font:600 13px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.26em;color:#f5a524;margin:0 0 12px}
+  a{color:#7fb4ff}
+</style>
+</head>
+<body>
+<main>
+  <h1>APORIA</h1>
+  <p>Trang bạn mở không tồn tại.</p>
+  <p><a id="home" href="/">Về lịch tin</a></p>
+</main>
+<script>
+  /* On a github.io project site the root is the first path segment; on a custom domain it is "/". */
+  (function(){
+    var seg = location.pathname.split("/").filter(Boolean)[0];
+    var root = /\.github\.io$/.test(location.hostname) && seg ? "/" + seg + "/" : "/";
+    document.getElementById("home").href = root;
+  })();
+</script>
+</body>
+</html>
