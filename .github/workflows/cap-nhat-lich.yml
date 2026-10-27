@@ -1,10 +1,15 @@
-# Cập nhật lịch tin Forex Factory mỗi giờ và xuất bản trang lên GitHub Pages.
-# Chạy khi: mỗi giờ (phút 17), khi bạn sửa file trong kho, hoặc khi bấm "Run workflow".
+# Cập nhật lịch tin Forex Factory và xuất bản trang lên GitHub Pages.
+# Chạy khi:
+#   - khoảng 5 phút một lần: mức dày nhất GitHub cho phép, và Forex Factory chỉ cho tải tối đa 2 lần mỗi 5 phút;
+#   - 6:00 sáng thứ Hai giờ Việt Nam: nạp lại lịch cả tuần (ghi lại kể cả khi không đổi);
+#   - khi bấm "Run workflow": tải lịch ngay;
+#   - khi bạn sửa file trong kho: chỉ đăng lại trang, không tải lịch.
 name: Cập nhật lịch tin
 
 on:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
+    - cron: "0 23 * * 0"   # 23:00 UTC Chủ nhật = 6:00 sáng thứ Hai giờ Việt Nam
   push:
     branches: [main]
   workflow_dispatch:
@@ -29,6 +34,9 @@ jobs:
 
       - name: Tải lịch Forex Factory
         id: cal
+        if: github.event_name != 'push'
+        env:
+          FORCE: ${{ github.event.schedule == '0 23 * * 0' && '1' || '0' }}
         run: python3 scripts/update_calendar.py
 
       - name: Lưu lịch mới vào kho
