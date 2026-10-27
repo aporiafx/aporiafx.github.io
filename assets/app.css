@@ -292,6 +292,8 @@ table.rt{width:100%;min-width:1080px;border-collapse:collapse;font-size:13px;tab
 .tv-ph.err{color:var(--warn)}
 .tradingview-widget-copyright{font-size:11px;padding:4px 12px 8px;color:var(--faint)}
 .tradingview-widget-copyright a{color:var(--dim)}
+/* TradingView pages use the light color-scheme; matching it keeps the isTransparent widgets see-through instead of white. */
+.tradingview-widget-container iframe{color-scheme:light}
 .uplist{list-style:none;margin:0;padding:0}
 .uplist li{display:grid;grid-template-columns:52px 24px 36px minmax(0,1fr);gap:8px;align-items:center;padding:7px 12px;border-bottom:1px solid #1a1f26}
 .uplist li:last-child{border-bottom:0}

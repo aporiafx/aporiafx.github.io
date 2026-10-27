@@ -152,7 +152,7 @@
     if (c.state === "loading") st = '<span class="st"><i class="warn"></i>Đang tải lịch…</span>';
     else if (c.state === "error") st = '<span class="st"><i class="err"></i>Không tải được lịch. Tải lại trang để thử lại.</span>';
     else if (!AP.calFresh()) st = '<span class="st"><i class="warn"></i>Lịch chưa được cập nhật cho tuần mới (lần cuối ' + hm(c.at) + " " + ddmm(c.at) + ")</span>";
-    else st = '<span class="st"><i class="ok"></i>Forex Factory · cập nhật ' + hm(c.at) + " " + ddmm(c.at) + "</span>";
+    else st = '<span class="st"><i class="ok"></i>Forex Factory · cập nhật ' + hm(c.at) + " " + ddmm(c.at) + " · kiểm tra 5 phút/lần</span>";
     $("srcLine").innerHTML = st + "<span>Giờ Việt Nam (GMT+7)</span><span>Bấm vào một tin để xem giải thích</span>";
   }
   function pass(e, now){

@@ -361,7 +361,7 @@
   }
   function calFresh(){ return cal.state === "ready" && cal.events.length > 0 && Date.now() < (weekEnd(cal.week) || cal.at + 8 * DAY); }
   async function getJson(path){
-    const r = await fetch(path + (path.indexOf("?") < 0 ? "?" : "&") + "v=" + Math.floor(Date.now() / 3e5), {cache: "no-cache"});
+    const r = await fetch(path + (path.indexOf("?") < 0 ? "?" : "&") + "v=" + Math.floor(Date.now() / 6e4), {cache: "no-cache"});
     if (!r.ok) throw new Error("HTTP " + r.status);
     return r.json();
   }
@@ -472,7 +472,7 @@
   function buildFooter(){
     const f = $("foot");
     if (!f) return;
-    f.innerHTML = "<div>Aporia · Lịch tin: dữ liệu tuần của <a href=\"https://www.forexfactory.com/calendar\" target=\"_blank\" rel=\"noopener\">Forex Factory</a>, tự cập nhật mỗi giờ. Giá, biểu đồ và tin tức: <a href=\"https://www.tradingview.com/\" target=\"_blank\" rel=\"noopener nofollow\">TradingView</a>. Mọi giờ hiển thị theo giờ Việt Nam (GMT+7) và tự đổi khi các thị trường chuyển giờ mùa hè/đông.</div>"
+    f.innerHTML = "<div>Aporia · Lịch tin: dữ liệu tuần của <a href=\"https://www.forexfactory.com/calendar\" target=\"_blank\" rel=\"noopener\">Forex Factory</a>, kiểm tra khoảng 5 phút một lần, nạp lại cả tuần lúc 6:00 sáng thứ Hai. Giá, biểu đồ và tin tức: <a href=\"https://www.tradingview.com/\" target=\"_blank\" rel=\"noopener nofollow\">TradingView</a>. Mọi giờ hiển thị theo giờ Việt Nam (GMT+7) và tự đổi khi các thị trường chuyển giờ mùa hè/đông.</div>"
       + "<div>Thông tin chỉ để tham khảo, không phải khuyến nghị đầu tư. Khung giờ kiến nghị là giả thuyết xuất phát, hãy kiểm chứng bằng nhật ký giao dịch của chính bạn.</div>";
   }
   /* TradingView widgets: free embeds, loaded from s3.tradingview.com. */
@@ -508,6 +508,7 @@
     setTimeout(() => { if (ph.isConnected && !wrap.querySelector("iframe") && !ph.classList.contains("err")) fail("TradingView chưa phản hồi. Tải lại trang để thử lại."); }, 20000);
     wrap.appendChild(s);
   }
+  /* Free widgets return no data for TVC index and yield symbols (TVC:DXY, TVC:US10Y), so DXY comes from Capital.com. */
   const TV_SYMS = [
     {id: "XAU", tv: "OANDA:XAUUSD", name: "Vàng", code: "XAUUSD"},
     {id: "EUR", tv: "OANDA:EURUSD", name: "EUR/USD", code: "EURUSD"},
@@ -516,8 +517,7 @@
     {id: "AUD", tv: "OANDA:AUDUSD", name: "AUD/USD", code: "AUDUSD"},
     {id: "WTI", tv: "TVC:USOIL", name: "Dầu WTI", code: "WTI"},
     {id: "BRENT", tv: "TVC:UKOIL", name: "Dầu Brent", code: "BRENT"},
-    {id: "DXY", tv: "TVC:DXY", name: "Chỉ số USD", code: "DXY"},
-    {id: "US10Y", tv: "TVC:US10Y", name: "Lợi suất Mỹ 10 năm", code: "US10Y"}
+    {id: "DXY", tv: "CAPITALCOM:DXY", name: "Chỉ số USD", code: "DXY"}
   ];
   function buildTicker(){
     const box = $("ticker");
@@ -546,7 +546,7 @@
   renderHeader(Date.now());
   setInterval(tick, 1000);
   loadCal();
-  setInterval(loadCal, 20 * M);
+  setInterval(loadCal, M);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ loadCal(); tick(); } });
   onCal(() => { stCache = {}; renderHeader(Date.now()); });
 

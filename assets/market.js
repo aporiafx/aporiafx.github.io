@@ -48,7 +48,7 @@
       symbolsGroups: [
         {name: "Kim loại và dầu", symbols: [{name: "OANDA:XAUUSD", displayName: "Vàng (XAUUSD)"}, {name: "OANDA:XAGUSD", displayName: "Bạc (XAGUSD)"}, {name: "TVC:USOIL", displayName: "Dầu WTI"}, {name: "TVC:UKOIL", displayName: "Dầu Brent"}]},
         {name: "Forex", symbols: [{name: "OANDA:EURUSD", displayName: "EUR/USD"}, {name: "OANDA:GBPUSD", displayName: "GBP/USD"}, {name: "OANDA:USDJPY", displayName: "USD/JPY"}, {name: "OANDA:AUDUSD", displayName: "AUD/USD"}]},
-        {name: "USD và lợi suất", symbols: [{name: "TVC:DXY", displayName: "Chỉ số USD (DXY)"}, {name: "TVC:US10Y", displayName: "Lợi suất Mỹ 10 năm"}, {name: "TVC:US02Y", displayName: "Lợi suất Mỹ 2 năm"}]}
+        {name: "USD và lợi suất", symbols: [{name: "CAPITALCOM:DXY", displayName: "Chỉ số USD (DXY)"}, {name: "FRED:DGS10", displayName: "Lợi suất Mỹ 10 năm (%)"}, {name: "FRED:DGS2", displayName: "Lợi suất Mỹ 2 năm (%)"}, {name: "OANDA:USB10YUSD", displayName: "Giá T-Note 10 năm"}]}
       ],
       showSymbolLogo: true, isTransparent: true, colorTheme: "dark", locale: "vi_VN"
     }, {height: "100%"});
