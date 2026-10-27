@@ -9,7 +9,7 @@ Trang công khai cho trader vàng, dầu và forex, giao diện tiếng Việt t
 
 ## Dữ liệu
 
-- Lịch tin: `scripts/update_calendar.py` tải lịch tuần của Forex Factory mỗi giờ (GitHub Actions, file `.github/workflows/cap-nhat-lich.yml`) và lưu vào `data/`.
+- Lịch tin: `scripts/update_calendar.py` tải lịch tuần của Forex Factory khoảng 5 phút một lần và nạp lại cả tuần lúc 6:00 sáng thứ Hai giờ Việt Nam (GitHub Actions, file `.github/workflows/cap-nhat-lich.yml`), lưu vào `data/`. Trang tự tải lại lịch mỗi phút. Dữ liệu công khai của Forex Factory không có số liệu thực tế (Actual); tab "Kết quả trực tiếp" lấy số này từ TradingView.
 - Giá, biểu đồ, tin tức: widget miễn phí của TradingView, tải trực tiếp trên trình duyệt người xem.
 
 Không cần máy chủ, cơ sở dữ liệu hay API key. Hướng dẫn đưa lên mạng: xem `HUONG-DAN.md`.

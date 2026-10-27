@@ -1,6 +1,6 @@
 # Đưa Aporia lên mạng
 
-Trang chạy trên **GitHub Pages**, miễn phí. Bạn chỉ cần một tài khoản GitHub và khoảng 15 phút, không cần cài phần mềm hay API key. Sau khi xong, lịch tin tự cập nhật mỗi giờ, bạn không phải làm gì thêm.
+Trang chạy trên **GitHub Pages**, miễn phí. Bạn chỉ cần một tài khoản GitHub và khoảng 15 phút, không cần cài phần mềm hay API key. Sau khi xong, lịch tin tự cập nhật khoảng 5 phút một lần, bạn không phải làm gì thêm.
 
 ## Bước 1. Tạo tài khoản GitHub
 
@@ -59,7 +59,7 @@ Khi có bản mới: vào kho → **Add file** → **Upload files** → kéo th�
 
 ## Khi gặp sự cố
 
-- **Lịch báo "chưa được cập nhật cho tuần mới":** mở tab **Actions**, xem lần chạy gần nhất. Nếu có cảnh báo "không tải được lịch Forex Factory", nghĩa là Forex Factory đang tạm chặn; lần chạy giờ sau sẽ thử lại. Muốn chạy ngay thì bấm **Run workflow**.
+- **Lịch báo "chưa được cập nhật cho tuần mới":** mở tab **Actions**, xem lần chạy gần nhất. Nếu có cảnh báo "không tải được lịch Forex Factory", nghĩa là Forex Factory đang tạm chặn; lần chạy sau (khoảng 5 phút) sẽ thử lại. Muốn chạy ngay thì bấm **Run workflow**.
 - **Không thấy giá, biểu đồ, tin tức:** các phần này lấy từ TradingView. Trình chặn quảng cáo có thể chặn chúng; hãy tắt chặn cho trang của bạn.
 - **Thiếu thư mục .github:** trong kho bấm **Add file** → **Create new file**. Ở ô tên file gõ `.github/workflows/cap-nhat-lich.yml`. Mở file cùng tên trong thư mục đã giải nén bằng Notepad (Windows) hoặc TextEdit (Mac), sao chép toàn bộ nội dung, dán vào GitHub, bấm **Commit changes**.
 - **Lịch ngừng tự chạy:** GitHub tạm dừng lịch chạy của kho không có hoạt động trong 60 ngày. Trang tự lưu lịch mới vào kho mỗi tuần nên thường không bị dừng. Nếu bị, vào **Actions** → chọn quy trình → **Enable workflow**.
