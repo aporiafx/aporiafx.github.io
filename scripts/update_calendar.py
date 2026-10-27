@@ -38,7 +38,7 @@ def output(name, value):
 
 
 def fetch():
-    req = urllib.request.Request(URL, headers={"User-Agent": "aporia-calendar/1.1 (+https://github.com/ledung-lang/aporia)", "Accept": "application/json"})
+    req = urllib.request.Request(URL, headers={"User-Agent": "aporia-calendar/1.1 (+https://github.com/aporiafx/aporiafx.github.io)", "Accept": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=40) as r:
             data = json.loads(r.read().decode("utf-8"))
