@@ -20,11 +20,16 @@
   <p><a id="home" href="/">Về lịch tin</a></p>
 </main>
 <script>
-  /* On a github.io project site the root is the first path segment; on a custom domain it is "/". */
+  /* The site normally lives at the root ("/"), e.g. aporiafx.github.io or a custom domain.
+     If it is published as a project site (owner.github.io/<repo>/), link back to that folder instead. */
   (function(){
+    var home = document.getElementById("home");
     var seg = location.pathname.split("/").filter(Boolean)[0];
-    var root = /\.github\.io$/.test(location.hostname) && seg ? "/" + seg + "/" : "/";
-    document.getElementById("home").href = root;
+    home.href = "/";
+    if (!seg || !/\.github\.io$/.test(location.hostname)) return;
+    fetch("/" + seg + "/assets/core.js", {method: "HEAD"})
+      .then(function(r){ if (r.ok) home.href = "/" + seg + "/"; })
+      .catch(function(){});
   })();
 </script>
 </body>
