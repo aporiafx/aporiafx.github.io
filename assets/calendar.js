@@ -153,7 +153,9 @@
     else if (c.state === "error") st = '<span class="st"><i class="err"></i>Không tải được lịch. Tải lại trang để thử lại.</span>';
     else if (!AP.calFresh()) st = '<span class="st"><i class="warn"></i>Lịch chưa được cập nhật cho tuần mới (lần cuối ' + hm(c.at) + " " + ddmm(c.at) + ")</span>";
     else st = '<span class="st"><i class="ok"></i>Forex Factory · cập nhật ' + hm(c.at) + " " + ddmm(c.at) + " · kiểm tra 5 phút/lần</span>";
-    $("srcLine").innerHTML = st + "<span>Giờ Việt Nam (GMT+7)</span><span>Bấm vào một tin để xem giải thích</span>";
+    $("srcLine").innerHTML = st + "<span>Giờ Việt Nam (GMT+7)</span><span>Bấm vào một tin để xem giải thích</span>"
+      + '<span class="lgd" title="So số thực tế với dự báo, xét theo tác động thường thấy lên đồng tiền của nước công bố">Cột Thực tế: '
+      + '<i class="up"></i>tốt hơn dự báo cho đồng tiền <i class="down"></i>kém hơn <i class="eq"></i>bằng dự báo</span>';
   }
   function pass(e, now){
     if (F.imp.indexOf(e.impact) < 0) return false;
@@ -172,6 +174,17 @@
   }
   const ACT_SRC = {Fed: "Fed (thông cáo FOMC)", BLS: "Cục Thống kê Lao động Mỹ (BLS)", ECB: "Ngân hàng Trung ương châu Âu (ECB)",
     BoE: "Ngân hàng Trung ương Anh (BoE)", ONS: "Văn phòng Thống kê Anh (ONS)", RBA: "Ngân hàng Dự trữ Úc (RBA)", BEA: "Cục Phân tích Kinh tế Mỹ (BEA)"};
+  /* One line under "Tác động thường thấy": how this release compares with the forecast and what the colour means. */
+  function actNote(e){
+    if (!e.actual) return "";
+    const a = parseFloat(String(e.actual).replace(/[^0-9.\-]/g, "")), f = parseFloat(String(e.forecast).replace(/[^0-9.\-]/g, ""));
+    if (isNaN(f)) return '<p class="actn eq">Lần này: thực tế ' + esc(e.actual) + ", không có dự báo để so (màu vàng).</p>";
+    if (e.better === 0 || a === f) return '<p class="actn eq">Lần này: thực tế ' + esc(e.actual) + " đúng bằng dự báo (màu vàng): thị trường đã tính trước, giá thường phản ứng theo phát biểu và chi tiết đi kèm.</p>";
+    const dir = a > f ? "cao hơn" : "thấp hơn";
+    return e.better > 0
+      ? '<p class="actn up">Lần này: thực tế ' + esc(e.actual) + " " + dir + " dự báo " + esc(e.forecast) + " → thường tốt cho " + e.ccy + " (màu xanh).</p>"
+      : '<p class="actn down">Lần này: thực tế ' + esc(e.actual) + " " + dir + " dự báo " + esc(e.forecast) + " → thường bất lợi cho " + e.ccy + " (màu đỏ).</p>";
+  }
   function detail(e){
     const x = infoFor(e);
     const C = (s) => s.replace(/\{C\}/g, e.ccy);
@@ -188,7 +201,7 @@
     return '<div class="det" id="d-' + e.id + '">'
       + "<div><h4>Đo lường</h4><p>" + esc(C(x.m)) + "</p></div>"
       + "<div><h4>Vì sao quan trọng</h4><p>" + esc(C(x.w)) + (e.tentative && e.impact === "high" ? " Giờ trong lịch là giờ dự kiến, nên vùng cần tránh kéo dài 60 phút sau đó." : "") + "</p></div>"
-      + "<div><h4>Tác động thường thấy</h4><p class=\"eff\">" + esc(C(x.e)) + "</p>" + (gold ? '<p style="margin-top:6px"><b style="color:#e6bd5c">Với vàng:</b> ' + esc(gold) + "</p>" : "") + "</div>"
+      + "<div><h4>Tác động thường thấy</h4><p class=\"eff\">" + esc(C(x.e)) + "</p>" + actNote(e) + (gold ? '<p style="margin-top:6px"><b style="color:#e6bd5c">Với vàng:</b> ' + esc(gold) + "</p>" : "") + "</div>"
       + '<div class="meta">' + meta.map((m) => "<span>" + m + "</span>").join("") + "</div></div>";
   }
   function row(e, now){
