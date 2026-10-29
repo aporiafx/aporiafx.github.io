@@ -100,7 +100,10 @@ def rss_items(xml):
         try:
             when = email.utils.parsedate_to_datetime(tag("pubDate"))
         except (TypeError, ValueError):
-            pass
+            try:  # some feeds (RBA) give an ISO date in <dc:date> instead
+                when = datetime.datetime.fromisoformat(tag("dc:date").replace("Z", "+00:00"))
+            except ValueError:
+                pass
         out.append({"title": tag("title"), "link": tag("link"), "when": when})
     return out
 
@@ -312,6 +315,8 @@ def boe(t_ms, ctx):
 
 
 RBA_RE = re.compile(r"cash rate target[^.]*?\b(?:at|to) (\d+(?:\.\d+)?) ?per ?cent")
+# Row of the RBA cash rate table: effective date (the day after the decision), change, new target.
+RBA_ROW = re.compile(r"(\d{1,2} [A-Z][a-z]{2} \d{4}) ([+-]?\d+\.\d{2}) (\d+\.\d{2})")
 
 
 def rba_parse(text):
@@ -319,8 +324,22 @@ def rba_parse(text):
     return pct2(m.group(1)) if m else None
 
 
+def rba_table(text, day):
+    """Target set at the decision of `day`, from the cash rate table (newest row first)."""
+    for m in RBA_ROW.finditer(text):
+        eff = datetime.datetime.strptime(m.group(1), "%d %b %Y").date()
+        if eff < day:
+            break
+        if eff <= day + datetime.timedelta(days=3):
+            return pct2(m.group(3))
+    return None
+
+
 def rba(t_ms, ctx):
     d = local_date(t_ms, "Australia/Sydney")
+    value = rba_table(text_of(ctx.fetch("rba-table", 15, lambda: get("https://www.rba.gov.au/statistics/cash-rate/"))), d)
+    if value:
+        return value
     for it in rss_items(ctx.fetch("rba-rss", 15, lambda: get("https://www.rba.gov.au/rss/rss-cb-media-releases.xml"))):
         if "monetary policy decision" in it["title"].lower() and on_day(it, d, "Australia/Sydney"):
             value = rba_parse(text_of(ctx.fetch("page:" + it["link"], 3600, lambda: get(it["link"]))))
@@ -458,10 +477,12 @@ def run_test():
         return "không thấy trang Monetary Policy Summary trong 4 tháng gần đây"
 
     def last_rba():
+        m = RBA_ROW.search(text_of(get("https://www.rba.gov.au/statistics/cash-rate/")))
+        row = f"bảng lãi suất: hiệu lực {m.group(1)}, thay đổi {m.group(2)}, mức {m.group(3)}%" if m else "không đọc được bảng lãi suất"
         for it in rss_items(get("https://www.rba.gov.au/rss/rss-cb-media-releases.xml")):
             if "monetary policy decision" in it["title"].lower():
-                return f"{it['link']} -> {rba_parse(text_of(get(it['link']))) or 'không đọc được câu lãi suất'}"
-        return "RSS không có tin Monetary Policy Decision"
+                return f"{row} | {it['link']} -> {rba_parse(text_of(get(it['link']))) or 'không đọc được câu lãi suất'}"
+        return row + " | RSS lúc này không có thông cáo quyết định (RSS chỉ giữ tin mới nhất)"
 
     def last_ons():
         d = ons_months(ctx, "d7g7")
