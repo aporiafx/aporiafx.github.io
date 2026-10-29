@@ -1,0 +1,97 @@
+# Điền số liệu thực tế (Actual) cho các tin chính, lấy thẳng từ nơi công bố chính thức
+# (Fed, BLS, ECB, BoE, ONS, RBA), rồi đăng lại trang. Không cần khoá API, không tốn phí.
+# Chạy khi:
+#   - khoảng 5 phút một lần: nếu trong 60 phút tới có tin chính, lần chạy chờ sẵn tới giờ công bố
+#     rồi hỏi nguồn 20 giây một lần cho tới khi có số (tối đa 25 phút sau giờ công bố);
+#     số bị lỡ trong tuần được điền bù ở lần chạy sau;
+#   - khi bấm "Run workflow"; đánh dấu "Chỉ kiểm tra nguồn" để xem số mới nhất của từng nguồn
+#     (hiện ở trang tóm tắt của lần chạy) mà không ghi gì vào kho.
+name: Số liệu thực tế
+
+on:
+  schedule:
+    - cron: "4,9,14,19,24,29,34,39,44,49,54,59 * * * *"
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Chỉ kiểm tra nguồn (không ghi dữ liệu)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  actions: write
+
+concurrency:
+  group: aporia-actuals
+  cancel-in-progress: false
+
+jobs:
+  actuals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    outputs:
+      changed: ${{ steps.act.outputs.changed }}
+      more: ${{ steps.act.outputs.more }}
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Lấy số liệu thực tế
+        id: act
+        env:
+          TEST: ${{ inputs.test && '1' || '0' }}
+        run: python3 scripts/update_actuals.py
+
+      - name: Lưu số liệu vào kho
+        if: steps.act.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/actuals.json
+          git commit -m "Cập nhật số liệu thực tế $(date -u +'%Y-%m-%d %H:%M') UTC"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep 10
+          done
+          exit 1
+
+  deploy:
+    needs: actuals
+    if: needs.actuals.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Lấy mã nguồn mới nhất
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Chuẩn bị GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Đóng gói trang
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Xuất bản
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  next:
+    needs: actuals
+    if: always() && needs.actuals.outputs.more == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chạy lần mới để chờ tin chính tiếp theo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ket-qua-tin.yml --repo "${{ github.repository }}" --ref main
