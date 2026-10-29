@@ -170,6 +170,8 @@
     }
     return true;
   }
+  const ACT_SRC = {Fed: "Fed (thông cáo FOMC)", BLS: "Cục Thống kê Lao động Mỹ (BLS)", ECB: "Ngân hàng Trung ương châu Âu (ECB)",
+    BoE: "Ngân hàng Trung ương Anh (BoE)", ONS: "Văn phòng Thống kê Anh (ONS)", RBA: "Ngân hàng Dự trữ Úc (RBA)"};
   function detail(e){
     const x = infoFor(e);
     const C = (s) => s.replace(/\{C\}/g, e.ccy);
@@ -180,6 +182,7 @@
     if (!e.allDay && k) meta.push((e.tentative ? "Giờ dự kiến: " : "Giờ công bố: ") + localHM(k, e.t) + " giờ " + ZNAME[k] + " (" + tzAbbr(k, e.t) + ") = " + hm(e.t) + " giờ VN");
     if (e.allDay) meta.push(e.tentative ? "Giờ chưa cố định trong ngày" : "Cả ngày");
     meta.push("Tên gốc: " + esc(e.title));
+    if (e.actual) meta.push("Thực tế " + esc(e.actual) + " · nguồn: " + esc(ACT_SRC[e.actSrc] || e.actSrc || "—") + (e.actAt ? ", lấy lúc " + hm(e.actAt) + " " + ddmm(e.actAt) : ""));
     meta.push(IMP_NAME[e.impact] || "");
     if (e.impact === "high" && !e.allDay) meta.push("Trên bản đồ giờ giao dịch: đứng ngoài " + hm(e.t - ZONE) + "–" + hm(e.t + after));
     return '<div class="det" id="d-' + e.id + '">'
@@ -206,6 +209,7 @@
       + '<span class="ccy">' + e.ccy + "</span>"
       + ib(e.impact)
       + '<span class="ev"><b>' + esc(e.vn || e.title) + "</b>" + badges + (e.vn && e.vn !== e.title ? '<span class="og">' + esc(e.title) + "</span>" : "") + "</span>"
+      + '<span class="num act' + (e.actual ? (e.better > 0 ? " up" : e.better < 0 ? " down" : " eq") : "") + '"' + (e.actual ? ' title="' + (e.better > 0 ? "Tốt hơn dự báo cho " + e.ccy : e.better < 0 ? "Kém hơn dự báo cho " + e.ccy : "Bằng dự báo") + '"' : "") + ">" + (e.actual ? '<span class="k">Thực tế</span>' + esc(e.actual) : "") + "</span>"
       + '<span class="num">' + (e.forecast ? '<span class="k">Dự báo</span>' + esc(e.forecast) : "") + "</span>"
       + '<span class="num pv">' + (e.previous ? '<span class="k">Kỳ trước</span>' + esc(e.previous) : "") + "</span>"
       + '<span class="chev" aria-hidden="true">›</span></div>'
@@ -217,7 +221,7 @@
     if (!view){ if (AP.cal.state === "error") box.innerHTML = '<div class="empty">Không tải được lịch tin. Kiểm tra kết nối rồi tải lại trang.</div>'; return; }
     const now = Date.now();
     const list = view.events.filter((e) => pass(e, now));
-    let html = '<div class="cr ch" aria-hidden="true"><span>Giờ</span><span>Tiền</span><span></span><span>Sự kiện</span><span class="r">Dự báo</span><span class="r">Kỳ trước</span><span></span></div>';
+    let html = '<div class="cr ch" aria-hidden="true"><span>Giờ</span><span>Tiền</span><span></span><span>Sự kiện</span><span class="r">Thực tế</span><span class="r">Dự báo</span><span class="r">Kỳ trước</span><span></span></div>';
     if (!list.length){
       box.innerHTML = html + '<div class="empty">' + (view.events.length ? "Không có tin nào khớp bộ lọc. Bấm “Bỏ lọc” để xem lại tất cả." : "Tuần này chưa có dữ liệu lịch.") + "</div>";
       return;
@@ -281,6 +285,7 @@
      --------------------------------------------------------- */
   renderFilters();
   srcLine();
+  AP.startActuals();
   AP.onCal(async (c) => {
     if (c.state !== "ready"){ render(); return; }
     if (!view || view.current){ sel = c.week; view = {week: c.week, at: c.at, events: c.events, current: true}; }
