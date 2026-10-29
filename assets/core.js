@@ -368,7 +368,7 @@
   async function loadCal(){
     try {
       const d = await getJson("data/calendar.json");
-      const evs = fromDoc(d);
+      const evs = withActuals(fromDoc(d));
       const changed = !cal.doc || d.at !== cal.at || d.week !== cal.week;
       Object.assign(cal, {doc: d, events: evs, at: typeof d.at === "number" ? d.at : 0, week: d.week || "", state: "ready"});
       if (changed){ cal.ver++; stCache = {}; calSubs.forEach((fn) => fn(cal)); }
@@ -381,11 +381,49 @@
   async function loadWeek(week){
     if (weekCache[week]) return weekCache[week];
     const d = await getJson("data/weeks/" + week + ".json");
-    return (weekCache[week] = {week: d.week || week, at: d.at || 0, events: fromDoc(d)});
+    return (weekCache[week] = {week: d.week || week, at: d.at || 0, events: withActuals(fromDoc(d))});
   }
   async function loadWeekIndex(){
     try { const d = await getJson("data/weeks/index.json"); return Array.isArray(d) ? d.filter((w) => /^\d{4}-\d{2}-\d{2}$/.test(w)).sort().reverse() : []; }
     catch { return []; }
+  }
+
+  /* =========================================================
+     Released figures (Actual) of the key events: data/actuals.json, filled straight from the official
+     publishers (Fed, BLS, ECB, BoE, ONS, RBA) by scripts/update_actuals.py. Keys are "CCY|title|t".
+     ========================================================= */
+  const act = {at: -1, items: {}};
+  function withActuals(list){
+    for (const e of list){
+      const a = act.items[e.ccy + "|" + e.title + "|" + e.t];
+      if (a && typeof a.actual === "string" && a.actual){
+        e.actual = a.actual;
+        e.better = a.better > 0 ? 1 : a.better < 0 ? -1 : 0;
+        e.actSrc = typeof a.src === "string" ? a.src : "";
+        e.actAt = typeof a.got === "number" ? a.got : 0;
+      } else { delete e.actual; delete e.better; delete e.actSrc; delete e.actAt; }
+    }
+    return list;
+  }
+  async function loadAct(){
+    try {
+      const d = await getJson("data/actuals.json");
+      const at = d && typeof d.at === "number" ? d.at : 0;
+      if (at === act.at) return;
+      act.at = at;
+      act.items = d && d.items && typeof d.items === "object" ? d.items : {};
+      withActuals(cal.events);
+      Object.keys(weekCache).forEach((w) => withActuals(weekCache[w].events));
+      if (cal.state === "ready"){ cal.ver++; calSubs.forEach((fn) => fn(cal)); }
+    } catch (e){ /* keep the figures already shown */ }
+  }
+  let actOn = false;
+  function startActuals(){
+    if (actOn) return;
+    actOn = true;
+    loadAct();
+    setInterval(loadAct, M);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") loadAct(); });
   }
 
   /* =========================================================
@@ -554,7 +592,7 @@
     M, H, DAY, VN, ZONE, AFTER_TENT, $, esc, LS, zoneParts, tzOffset, zonedToUtc, vn, pad, hm, vnStart, dayKey, WD, dayLabel, ddmm, addDays, dur,
     TZ, ZNAME, WK, atLocal, localHM, tzAbbr, utcLabel, occ, closedSpans, fxOpen, nyseOpen, SESS, sessSpans,
     GEN, INSTR, LV, CCYS, CCY_LABEL, vnTitle, groupByTime, paint, winSpans, endLabel, spanText, ticksFor, mergeRuns,
-    cal, calFresh, weekEnd, onCal, loadCal, loadWeek, loadWeekIndex,
+    cal, calFresh, weekEnd, onCal, loadCal, loadWeek, loadWeekIndex, act, startActuals,
     focusId: () => focus, setFocus, onFocus: (fn) => focusSubs.push(fn), focusStatus,
     onTick: (fn) => tickSubs.push(fn), tv, TV_SYMS
   };
