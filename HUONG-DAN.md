@@ -60,6 +60,7 @@ Khi có bản mới: vào kho → **Add file** → **Upload files** → kéo th�
 ## Khi gặp sự cố
 
 - **Lịch báo "chưa được cập nhật cho tuần mới":** mở tab **Actions**, xem lần chạy gần nhất. Nếu có cảnh báo "không tải được lịch Forex Factory", nghĩa là Forex Factory đang tạm chặn; lần chạy sau (khoảng 5 phút) sẽ thử lại. Muốn chạy ngay thì bấm **Run workflow**.
+- **Cột Thực tế chưa có số sau giờ công bố:** số lấy từ nơi công bố chính thức, thường có sau 1–2 phút (quy trình **Số liệu thực tế**). GitHub có lúc chạy trễ; số bị lỡ được điền bù ở lần chạy sau. Muốn xem từng nguồn có đọc được không: **Actions** → **Số liệu thực tế** → **Run workflow**, đánh dấu **Chỉ kiểm tra nguồn** → **Run workflow**, rồi mở lần chạy để xem bảng tóm tắt.
 - **Không thấy giá, biểu đồ, tin tức:** các phần này lấy từ TradingView. Trình chặn quảng cáo có thể chặn chúng; hãy tắt chặn cho trang của bạn.
 - **Thiếu thư mục .github:** trong kho bấm **Add file** → **Create new file**. Ở ô tên file gõ `.github/workflows/cap-nhat-lich.yml`. Mở file cùng tên trong thư mục đã giải nén bằng Notepad (Windows) hoặc TextEdit (Mac), sao chép toàn bộ nội dung, dán vào GitHub, bấm **Commit changes**.
 - **Lịch ngừng tự chạy:** GitHub tạm dừng lịch chạy của kho không có hoạt động trong 60 ngày. Trang tự lưu lịch mới vào kho mỗi tuần nên thường không bị dừng. Nếu bị, vào **Actions** → chọn quy trình → **Enable workflow**.
@@ -68,3 +69,4 @@ Khi có bản mới: vào kho → **Add file** → **Upload files** → kéo th�
 
 - **Lịch tin:** dữ liệu lịch tuần công khai của [Forex Factory](https://www.forexfactory.com/calendar); trang luôn ghi rõ nguồn. Nếu trang có nhiều người dùng hoặc dùng cho mục đích thương mại, hãy đọc điều khoản sử dụng của Forex Factory.
 - **Giá, biểu đồ, tin tức:** widget miễn phí của [TradingView](https://www.tradingview.com/widget/), được phép nhúng vào trang công khai khi giữ dòng ghi nguồn TradingView.
+- **Số liệu thực tế (cột Thực tế):** thông cáo và dữ liệu công khai của Fed, Cục Thống kê Lao động Mỹ (BLS), ECB, Ngân hàng Trung ương Anh (BoE), Văn phòng Thống kê Anh (ONS) và Ngân hàng Dự trữ Úc (RBA).
