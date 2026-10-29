@@ -56,6 +56,10 @@ jobs:
     needs: update
     if: needs.update.outputs.changed == 'true' || github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    # Dùng chung với workflow "Số liệu thực tế": mỗi lúc chỉ một lần xuất bản trang.
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
