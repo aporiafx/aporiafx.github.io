@@ -7,8 +7,8 @@ Writes data/actuals.json:
 0 = same as the forecast or no forecast.
 
 Figures come straight from the official publishers, no API key needed:
-  Fed statement, BLS (CPI, payrolls, unemployment, hourly earnings), ECB decision,
-  BoE Monetary Policy Summary, ONS (UK CPI), RBA decision.
+  Fed statement, BLS (CPI, payrolls, unemployment, hourly earnings), BEA (GDP, core PCE prices),
+  ECB decision, BoE Monetary Policy Summary, ONS (UK CPI), RBA decision.
 Runs from .github/workflows/ket-qua-tin.yml. When a key release is due within LOOKAHEAD it waits,
 then polls the publisher until the new figure appears (at most POLL_AFTER after the release time).
 TEST=1 prints the latest figure each publisher has out now and writes nothing.
@@ -274,6 +274,84 @@ def fed(t_ms, ctx):
     return fed_parse(text_of(page)) if page else None
 
 
+# BEA: release pages on bea.gov ("GDP (Advance Estimate), 3rd Quarter 2026", "Personal Income and Outlays, September 2026").
+BEA = "https://www.bea.gov"
+QUARTER = {1: ("1st", "first"), 2: ("2nd", "second"), 3: ("3rd", "third"), 4: ("4th", "fourth")}
+GDP_STAGE = {"advance": "gdp-advance-estimate", "second": "gdp-second-estimate", "third": "gdp-third-estimate"}
+GDP_RE = re.compile(r"Real gross domestic product \(GDP\) (increased|decreased|was unchanged)"
+                    r"(?: at an annual rate of (\d+(?:\.\d+)?) percent)? in the (first|second|third|fourth) quarter(?: of (\d{4}))?")
+PCE_RE = re.compile(r"From the preceding month, the PCE price index for (\w+) (increased|decreased|was unchanged)"
+                    r"(?: (less than )?(\d+(?:\.\d+)?) percent)?[ .]*Excluding food and energy, the PCE price index (?:also )?"
+                    r"(increased|decreased|was unchanged)(?: (less than )?(\d+(?:\.\d+)?) percent)?")
+
+
+def signed(verb, less, value):
+    if verb == "was unchanged" or less or value is None:
+        return 0.0
+    return -float(value) if verb == "decreased" else float(value)
+
+
+def gdp_parse(text, year, q):
+    for m in GDP_RE.finditer(text):
+        if m.group(3) == QUARTER[q][1] and (not m.group(4) or int(m.group(4)) == year):
+            return r1(signed(m.group(1), None, m.group(2))) + "%"
+    return None
+
+
+def pce_parse(text, month, core=True):
+    m = PCE_RE.search(text)
+    if not m or m.group(1).lower() != month:
+        return None
+    v = signed(m.group(5), m.group(6), m.group(7)) if core else signed(m.group(2), m.group(3), m.group(4))
+    return r1(v) + "%"
+
+
+def bea_pages(ctx, guess, pattern):
+    """The expected release page first, then matching links on BEA's list of current releases."""
+    urls = [guess]
+    try:
+        listing = ctx.fetch("bea-current", 15, lambda: get(BEA + "/news/current-releases"))
+        urls += [BEA + p for p in re.findall(pattern, listing)]
+    except Exception as e:
+        print(f"::warning::BEA current releases: {e}")
+    for url in dict.fromkeys(urls):
+        try:
+            page = ctx.fetch("page:" + url, 10, lambda: get_or_none(url))
+        except Exception as e:
+            print(f"::warning::BEA {url}: {e}")
+            continue
+        if page:
+            yield text_of(page)
+
+
+def bea_gdp(stage):
+    def source(t_ms, ctx):
+        d = local_date(t_ms, "America/New_York")
+        q, y = (d.month - 1) // 3, d.year      # the quarter before the release
+        if q == 0:
+            q, y = 4, y - 1
+        slug = f"{GDP_STAGE[stage]}-{QUARTER[q][0]}-quarter-{'and-year-' if q == 4 else ''}{y}"
+        for text in bea_pages(ctx, f"{BEA}/news/{d.year}/{slug}", r"/news/\d{4}/%s[a-z0-9\-]*" % GDP_STAGE[stage]):
+            value = gdp_parse(text, y, q)
+            if value:
+                return value
+        return None
+    return source
+
+
+def bea_pce(core=True):
+    def source(t_ms, ctx):
+        d = local_date(t_ms, "America/New_York")
+        y, m = ref_month(t_ms, "America/New_York")
+        guess = f"{BEA}/news/{d.year}/personal-income-and-outlays-{MONTHS[m - 1]}-{y}"
+        for text in bea_pages(ctx, guess, r"/news/\d{4}/personal-income-and-outlays-[a-z0-9\-]*"):
+            value = pce_parse(text, MONTHS[m - 1], core)
+            if value:
+                return value
+        return None
+    return source
+
+
 ECB_RES = [re.compile(r"deposit facility, the main refinancing operations and the marginal lending facility will "
                       r"(?:remain unchanged at|be (?:increased|decreased|raised|reduced|lowered|cut) to) "
                       r"(\d+(?:\.\d+)?) ?% ?, ?(\d+(?:\.\d+)?) ?% ?,? and (\d+(?:\.\d+)?) ?%"),
@@ -398,6 +476,11 @@ RULES = {
     ("USD", "Non-Farm Employment Change"): (bls("nfp"), "BLS", 1, (-25000, 25000)),
     ("USD", "Unemployment Rate"): (bls("ur"), "BLS", -1, (0, 30)),
     ("USD", "Average Hourly Earnings m/m"): (bls("ahe_mm"), "BLS", 1, (-5, 5)),
+    ("USD", "Advance GDP q/q"): (bea_gdp("advance"), "BEA", 1, (-40, 40)),
+    ("USD", "Prelim GDP q/q"): (bea_gdp("second"), "BEA", 1, (-40, 40)),
+    ("USD", "Final GDP q/q"): (bea_gdp("third"), "BEA", 1, (-40, 40)),
+    ("USD", "Core PCE Price Index m/m"): (bea_pce(True), "BEA", 1, (-3, 3)),
+    ("USD", "PCE Price Index m/m"): (bea_pce(False), "BEA", 1, (-3, 3)),
     ("EUR", "Main Refinancing Rate"): (ecb, "ECB", 1, RATE),
     ("GBP", "Official Bank Rate"): (boe, "BoE", 1, RATE),
     ("GBP", "CPI y/y"): (ons("d7g7"), "ONS", 1, (-10, 30)),
@@ -511,8 +594,22 @@ def run_test():
         ym = max(d)
         return f"tháng {ym[1]:02d}/{ym[0]} = {d[ym]}%"
 
+    def last_bea():
+        listing = get(BEA + "/news/current-releases")
+        out = []
+        for p in dict.fromkeys(re.findall(r"/news/\d{4}/(?:gdp-(?:advance|second|third)-estimate|personal-income-and-outlays)[a-z0-9\-]*", listing)):
+            t = text_of(get(BEA + p))
+            g = GDP_RE.search(t)
+            pc = PCE_RE.search(t)
+            if g:
+                out.append(f"{p} -> GDP quý {g.group(3)} {g.group(4) or ''}: {g.group(1)} {g.group(2) or ''}%")
+            if pc:
+                out.append(f"{p} -> PCE tháng {pc.group(1)}: {pce_parse(t, pc.group(1).lower(), False)}, lõi {pce_parse(t, pc.group(1).lower(), True)}")
+        return " | ".join(out) or "không thấy bản tin GDP/PCE trong danh sách hiện hành"
+
     show("Fed", last_fed)
     show("BLS", last_bls)
+    show("BEA", last_bea)
     show("ECB", last_ecb)
     show("BoE", last_boe)
     show("RBA", last_rba)
