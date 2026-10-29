@@ -269,7 +269,7 @@ def fed(t_ms, ctx):
     if page is None:  # fall back to the press-release feed in case the address pattern changes
         for it in rss_items(ctx.fetch("fed-rss", 15, lambda: get("https://www.federalreserve.gov/feeds/press_monetary.xml"))):
             if "fomc statement" in it["title"].lower() and on_day(it, d, "America/New_York"):
-                page = ctx.fetch("page:" + it["link"], 3600, lambda: get(it["link"]))
+                page = ctx.fetch("page:" + it["link"], 30, lambda: get(it["link"]))
                 break
     return fed_parse(text_of(page)) if page else None
 
@@ -285,14 +285,34 @@ def ecb_parse(text):
     return pct2(m.group(2)) if m else None
 
 
+def ecb_links(inc, prefix):
+    """Decision pages listed in the ECB's yearly list of monetary policy decisions."""
+    paths = re.findall(r"/press/pr/date/\d{4}/html/" + re.escape(prefix) + r"\d*~[0-9a-f]+\.en\.html", inc)
+    return ["https://www.ecb.europa.eu" + p for p in dict.fromkeys(paths)]
+
+
 def ecb(t_ms, ctx):
     d = local_date(t_ms, "Europe/Berlin")
     mp = "ecb.mp" + d.strftime("%y%m%d")
-    for it in rss_items(ctx.fetch("ecb-rss", 15, lambda: get("https://www.ecb.europa.eu/rss/press.html"))):
-        if mp in it["link"] or ("monetary policy decision" in it["title"].lower() and on_day(it, d, "Europe/Berlin")):
-            value = ecb_parse(text_of(ctx.fetch("page:" + it["link"], 3600, lambda: get(it["link"]))))
-            if value:
-                return value
+    links, errors = [], []
+    try:
+        for it in rss_items(ctx.fetch("ecb-rss", 15, lambda: get("https://www.ecb.europa.eu/rss/press.html"))):
+            if mp in it["link"] or ("monetary policy decision" in it["title"].lower() and on_day(it, d, "Europe/Berlin")):
+                links.append(it["link"])
+    except Exception as e:
+        errors.append(f"RSS: {e}")
+    if not links:  # the feed can lag: also look in the year's list of decisions
+        try:
+            links = ecb_links(ctx.fetch("ecb-list", 15, lambda: get(
+                f"https://www.ecb.europa.eu/press/govcdec/mopo/{d.year}/html/index_include.en.html")), mp)
+        except Exception as e:
+            errors.append(f"danh sách quyết định: {e}")
+    for link in links:
+        value = ecb_parse(text_of(ctx.fetch("page:" + link, 30, lambda: get(link))))
+        if value:
+            return value
+    if errors and not links:
+        raise RuntimeError("; ".join(errors))
     return None
 
 
@@ -342,7 +362,7 @@ def rba(t_ms, ctx):
         return value
     for it in rss_items(ctx.fetch("rba-rss", 15, lambda: get("https://www.rba.gov.au/rss/rss-cb-media-releases.xml"))):
         if "monetary policy decision" in it["title"].lower() and on_day(it, d, "Australia/Sydney"):
-            value = rba_parse(text_of(ctx.fetch("page:" + it["link"], 3600, lambda: get(it["link"]))))
+            value = rba_parse(text_of(ctx.fetch("page:" + it["link"], 30, lambda: get(it["link"]))))
             if value:
                 return value
     return None
@@ -461,10 +481,12 @@ def run_test():
         return " | ".join(parts)
 
     def last_ecb():
-        for it in rss_items(get("https://www.ecb.europa.eu/rss/press.html")):
-            if "ecb.mp" in it["link"] or "monetary policy decision" in it["title"].lower():
-                return f"{it['link']} -> MRO {ecb_parse(text_of(get(it['link']))) or 'không đọc được câu lãi suất'}"
-        return "RSS lúc này không có thông cáo quyết định lãi suất (RSS chỉ giữ các tin mới nhất)"
+        rss = any("ecb.mp" in it["link"] for it in rss_items(get("https://www.ecb.europa.eu/rss/press.html")))
+        links = ecb_links(get(f"https://www.ecb.europa.eu/press/govcdec/mopo/{now.year}/html/index_include.en.html"), "ecb.mp")
+        if not links:
+            return f"không thấy quyết định nào trong danh sách năm {now.year}"
+        value = ecb_parse(text_of(get(links[0]))) or "không đọc được câu lãi suất"
+        return f"{links[0]} -> MRO {value} (RSS lúc này {'có' if rss else 'không có'} thông cáo quyết định)"
 
     def last_boe():
         y, m = now.year, now.month
