@@ -127,6 +127,7 @@
   const T_US10 = {k: "N", h: 10, m: 0, n: "Tin Mỹ 10:00 (ISM, JOLTS, niềm tin tiêu dùng…)"};
   const T_FED = {k: "N", h: 14, m: 0, n: "Fed công bố lãi suất (ngày họp FOMC)"};
 
+  /* Order on every page: gold, oil, the USD majors, then the yen crosses. */
   const INSTR = [
     {id: "XAU", code: "XAUUSD", name: "Vàng", aff: (e) => e.tags.has("XAU"),
       segs: [
@@ -140,6 +141,20 @@
       ticks: [T_US10, T_FED, {k: "L", h: 10, m: 30, n: "Giá fix LBMA buổi sáng"}, {k: "L", h: 15, m: 0, n: "Giá fix LBMA buổi chiều"}],
       drivers: "DXY, lợi suất thực Mỹ 10 năm, kỳ vọng lãi suất Fed, rủi ro địa chính trị.",
       tip: "NFP, CPI, FOMC làm vàng biến động mạnh nhất tuần: đứng ngoài ±15 phút, vào lại khi nến M15 sau tin đóng cửa."},
+    {id: "OIL", code: "DẦU", name: "WTI · Brent", aff: (e) => e.tags.has("OIL") || (e.ccy === "USD" && e.impact === "high"),
+      segs: [
+        earlyAsia(["T", 9, 0]),
+        {l: "warn", a: ["T", 9, 0], b: ["L", 8, 0], n: "Phiên Á", d: "Dầu ít lực, chủ yếu đi ngang."},
+        {l: "warn", a: ["L", 11, 0], b: ["N", 9, 0], n: "Chờ sàn NYMEX", d: "WTI chờ giờ chính của sàn Mỹ. Tránh tin Mỹ 8:30."},
+        {l: "warn", a: ["N", 14, 30], b: ["N", 16, 45], n: "Sau giờ chốt NYMEX", d: "Lực giảm sau giờ chốt giá. Hạn chế mở lệnh mới."},
+        {l: "good", a: ["L", 8, 15], b: ["L", 11, 0], n: "Brent – châu Âu", d: "Brent giao dịch sôi động theo London, WTI theo sau."},
+        {l: "best", a: ["N", 9, 0], b: ["N", 14, 30], n: "Giờ chính sàn NYMEX", d: "Thanh khoản dầu cao nhất ngày, giá chốt lúc 14:30 giờ New York."},
+        {l: "stop", a: ["N", 10, 15], b: ["N", 10, 45], n: "Tồn kho dầu EIA", d: "Thứ Tư 10:30 giờ New York, dầu biến động mạnh. Đứng ngoài ±15 phút.", days: [3]},
+        S_.ldnOpen, S_.usData, S_.rollCmd, cmdBreak("Dầu"), S_.weekOpen
+      ],
+      ticks: [{k: "N", h: 10, m: 30, n: "Tồn kho dầu EIA (thứ Tư)", days: [3]}, {k: "N", h: 13, m: 0, n: "Số giàn khoan Baker Hughes (thứ Sáu)", days: [5]}, {k: "N", h: 14, m: 30, n: "Chốt giá NYMEX"}, {k: "N", h: 16, m: 30, n: "Tồn kho dầu API (thứ Ba)", days: [2]}],
+      drivers: "Tồn kho EIA/API, quyết định OPEC+, địa chính trị Trung Đông, USD.",
+      tip: "Giờ chính sàn NYMEX có thanh khoản tốt nhất. Tránh tin tồn kho EIA chiều thứ Tư."},
     {id: "EUR", code: "EURUSD", name: "Euro", aff: (e) => e.ccy === "USD" || e.ccy === "EUR",
       segs: [
         earlyAsia(["T", 9, 0]),
@@ -169,6 +184,19 @@
       ticks: [{k: "L", h: 7, m: 0, n: "ONS: CPI, việc làm, GDP Anh"}, {k: "L", h: 9, m: 30, n: "PMI Anh"}, {k: "L", h: 12, m: 0, n: "BoE công bố lãi suất (ngày họp)"}],
       drivers: "Lạm phát và tiền lương ở Anh, kỳ vọng BoE, lợi suất trái phiếu Anh.",
       tip: "Dữ liệu Anh ra 07:00 giờ London, ngay trước giờ mở cửa: M5 rất nhiễu. Tỷ lệ phiếu của BoE thường gây giật mạnh."},
+    {id: "AUD", code: "AUDUSD", name: "Đô la Úc", aff: (e) => e.ccy === "USD" || e.ccy === "AUD",
+      segs: [
+        earlyAsia(["S", 10, 0]),
+        {l: "warn", a: ["T", 11, 30], b: ["L", 8, 0], n: "Chiều châu Á", d: "Lực yếu dần trước khi châu Âu mở cửa."},
+        ldnLunch(["L", 10, 30], ["N", 8, 15]), S_.usPm,
+        {l: "good", a: ["S", 10, 0], b: ["T", 11, 30], n: "Phiên Úc – Tokyo sáng", d: "Dữ liệu Úc và Trung Quốc ra trong khung này, AUD có lực."},
+        {l: "good", a: ["L", 8, 15], b: ["L", 10, 30], n: "Sáng London", d: "Thanh khoản châu Âu vào, AUD đi theo tâm lý rủi ro chung."},
+        {l: "best", a: ["N", 8, 45], b: ["N", 11, 30], n: "Giao thoa London – New York", d: "Biến động cao nhất ngày, phản ứng mạnh với tin Mỹ và chứng khoán Mỹ. Ưu tiên setup A/B."},
+        S_.ldnOpen, S_.usData, S_.rollFx, S_.weekOpen
+      ],
+      ticks: [{k: "S", h: 11, m: 30, n: "ABS: CPI tháng, việc làm Úc"}, {k: "S", h: 14, m: 30, n: "RBA công bố lãi suất (ngày họp)"}, {k: "B", h: 9, m: 30, n: "PMI Trung Quốc (cuối tháng)"}, {k: "B", h: 10, m: 0, n: "Dữ liệu Trung Quốc (NBS)"}],
+      drivers: "Dữ liệu Úc và Trung Quốc, giá quặng sắt, chứng khoán Mỹ, tâm lý rủi ro.",
+      tip: "Hai khung đáng trade: sáng phiên Úc khi có dữ liệu, và khi Mỹ vào phiên."},
     {id: "JPY", code: "USDJPY", name: "Yên Nhật", aff: (e) => e.ccy === "USD" || e.ccy === "JPY",
       segs: [
         earlyAsia(["T", 8, 30]),
@@ -183,33 +211,39 @@
       ticks: [{k: "T", h: 8, m: 30, n: "Dữ liệu Nhật (CPI, việc làm…)"}, {k: "T", h: 9, m: 55, n: "Giá fix Tokyo"}, {k: "T", h: 12, m: 0, n: "BoJ công bố (ngày họp, giờ không cố định)"}, {k: "T", h: 15, m: 30, n: "Họp báo BoJ"}],
       drivers: "Chênh lệch lợi suất Mỹ – Nhật, chính sách BoJ, tâm lý rủi ro toàn cầu.",
       tip: "Khi Bộ Tài chính Nhật lên tiếng cảnh báo, giá có thể đảo chiều vài trăm pip trong vài phút."},
-    {id: "AUD", code: "AUDUSD", name: "Đô la Úc", aff: (e) => e.ccy === "USD" || e.ccy === "AUD",
+    {id: "EURJPY", code: "EURJPY", name: "Euro – Yên", aff: (e) => e.ccy === "EUR" || e.ccy === "JPY" || (e.ccy === "USD" && e.impact === "high"),
       segs: [
-        earlyAsia(["S", 10, 0]),
-        {l: "warn", a: ["T", 11, 30], b: ["L", 8, 0], n: "Chiều châu Á", d: "Lực yếu dần trước khi châu Âu mở cửa."},
-        ldnLunch(["L", 10, 30], ["N", 8, 15]), S_.usPm,
-        {l: "good", a: ["S", 10, 0], b: ["T", 11, 30], n: "Phiên Úc – Tokyo sáng", d: "Dữ liệu Úc và Trung Quốc ra trong khung này, AUD có lực."},
-        {l: "good", a: ["L", 8, 15], b: ["L", 10, 30], n: "Sáng London", d: "Thanh khoản châu Âu vào, AUD đi theo tâm lý rủi ro chung."},
-        {l: "best", a: ["N", 8, 45], b: ["N", 11, 30], n: "Giao thoa London – New York", d: "Biến động cao nhất ngày, phản ứng mạnh với tin Mỹ và chứng khoán Mỹ. Ưu tiên setup A/B."},
+        earlyAsia(["T", 8, 30]),
+        {l: "warn", a: ["T", 8, 30], b: ["T", 9, 0], n: "Giờ dữ liệu Nhật", d: "Ngày có tin (CPI, việc làm), giá có thể giật trước giờ Tokyo mở cửa."},
+        {l: "warn", a: ["T", 11, 30], b: ["F", 8, 0], n: "Chiều châu Á", d: "Biên độ giảm còn khoảng 2/3 so với sáng Tokyo. Chờ châu Âu mở cửa."},
+        {l: "warn", a: ["F", 8, 0], b: ["L", 8, 0], n: "Frankfurt mở cửa", d: "EUR bắt đầu có lực, dữ liệu Đức có thể ra. Theo dõi, chưa vội vào lệnh."},
+        ldnLunch(["L", 11, 0], ["N", 8, 15]),
+        {l: "warn", a: ["L", 16, 30], b: ["N", 16, 45], n: "Chiều Mỹ", d: "London đã đóng cửa, biên độ chỉ còn khoảng một nửa. Hạn chế mở lệnh mới."},
+        {l: "good", a: ["T", 9, 0], b: ["T", 11, 30], n: "Sáng Tokyo", d: "Dòng tiền Nhật vào thị trường, giá fix Tokyo lúc 9:55. Biên độ gần bằng sáng London nhưng phía EUR ít tin."},
+        {l: "best", a: ["L", 8, 15], b: ["L", 11, 0], n: "Sáng London", d: "Mở đầu bằng giao thoa Tokyo – London, cả EUR và JPY đều có thanh khoản; dữ liệu Đức và khối euro ra trong khung này. Ưu tiên setup A/B."},
+        {l: "good", a: ["N", 8, 45], b: ["L", 16, 30], n: "Giao thoa London – New York", d: "Biên độ giờ lớn nhất ngày, nhưng phần lớn do tin Mỹ đẩy qua EURUSD và USDJPY. Đi theo xu hướng đã hình thành."},
         S_.ldnOpen, S_.usData, S_.rollFx, S_.weekOpen
       ],
-      ticks: [{k: "S", h: 11, m: 30, n: "ABS: CPI tháng, việc làm Úc"}, {k: "S", h: 14, m: 30, n: "RBA công bố lãi suất (ngày họp)"}, {k: "B", h: 9, m: 30, n: "PMI Trung Quốc (cuối tháng)"}, {k: "B", h: 10, m: 0, n: "Dữ liệu Trung Quốc (NBS)"}],
-      drivers: "Dữ liệu Úc và Trung Quốc, giá quặng sắt, chứng khoán Mỹ, tâm lý rủi ro.",
-      tip: "Hai khung đáng trade: sáng phiên Úc khi có dữ liệu, và khi Mỹ vào phiên."},
-    {id: "OIL", code: "DẦU", name: "WTI · Brent", aff: (e) => e.tags.has("OIL") || (e.ccy === "USD" && e.impact === "high"),
+      ticks: [{k: "T", h: 8, m: 30, n: "Dữ liệu Nhật (CPI, việc làm…)"}, {k: "T", h: 9, m: 55, n: "Giá fix Tokyo"}, {k: "T", h: 12, m: 0, n: "BoJ công bố (ngày họp, giờ không cố định)"}, {k: "F", h: 11, m: 0, n: "Eurostat: CPI, GDP khối euro"}, {k: "F", h: 14, m: 15, n: "ECB công bố lãi suất (ngày họp)"}],
+      drivers: "Chênh lệch lãi suất ECB – BoJ, tâm lý rủi ro toàn cầu (chứng khoán tăng thì yên thường yếu), dữ liệu khối euro và Nhật.",
+      tip: "Biên độ ngày trung bình khoảng 100 pip. Khi Bộ Tài chính Nhật cảnh báo hoặc can thiệp, các cặp yên có thể đảo chiều vài trăm pip trong vài phút."},
+    {id: "GBPJPY", code: "GBPJPY", name: "Bảng Anh – Yên", aff: (e) => e.ccy === "GBP" || e.ccy === "JPY" || (e.ccy === "USD" && e.impact === "high"),
       segs: [
-        earlyAsia(["T", 9, 0]),
-        {l: "warn", a: ["T", 9, 0], b: ["L", 8, 0], n: "Phiên Á", d: "Dầu ít lực, chủ yếu đi ngang."},
-        {l: "warn", a: ["L", 11, 0], b: ["N", 9, 0], n: "Chờ sàn NYMEX", d: "WTI chờ giờ chính của sàn Mỹ. Tránh tin Mỹ 8:30."},
-        {l: "warn", a: ["N", 14, 30], b: ["N", 16, 45], n: "Sau giờ chốt NYMEX", d: "Lực giảm sau giờ chốt giá. Hạn chế mở lệnh mới."},
-        {l: "good", a: ["L", 8, 15], b: ["L", 11, 0], n: "Brent – châu Âu", d: "Brent giao dịch sôi động theo London, WTI theo sau."},
-        {l: "best", a: ["N", 9, 0], b: ["N", 14, 30], n: "Giờ chính sàn NYMEX", d: "Thanh khoản dầu cao nhất ngày, giá chốt lúc 14:30 giờ New York."},
-        {l: "stop", a: ["N", 10, 15], b: ["N", 10, 45], n: "Tồn kho dầu EIA", d: "Thứ Tư 10:30 giờ New York, dầu biến động mạnh. Đứng ngoài ±15 phút.", days: [3]},
-        S_.ldnOpen, S_.usData, S_.rollCmd, cmdBreak("Dầu"), S_.weekOpen
+        earlyAsia(["T", 8, 30]),
+        {l: "warn", a: ["T", 8, 30], b: ["T", 9, 0], n: "Giờ dữ liệu Nhật", d: "Ngày có tin (CPI, việc làm), giá có thể giật trước giờ Tokyo mở cửa."},
+        {l: "warn", a: ["T", 11, 30], b: ["L", 7, 0], n: "Chiều châu Á", d: "Biên độ giảm còn khoảng 2/3 so với sáng Tokyo; phiên Á thường tạo vùng range để London phá."},
+        {l: "warn", a: ["L", 7, 0], b: ["L", 8, 0], n: "Châu Âu mở cửa", d: "Thanh khoản đang vào. Theo dõi, chưa vội vào lệnh."},
+        {l: "warn", a: ["L", 6, 55], b: ["L", 7, 15], n: "Giờ dữ liệu Anh (ONS)", d: "Ngày có tin, nến M5 rất nhiễu ngay trước giờ mở cửa London."},
+        ldnLunch(["L", 10, 30], ["N", 8, 15]),
+        {l: "warn", a: ["L", 16, 30], b: ["N", 16, 45], n: "Chiều Mỹ", d: "London đã đóng cửa, biên độ chỉ còn khoảng một nửa. Hạn chế mở lệnh mới."},
+        {l: "good", a: ["T", 9, 0], b: ["T", 11, 30], n: "Sáng Tokyo", d: "Dòng tiền Nhật vào thị trường, giá fix Tokyo lúc 9:55. Biên độ khoảng 9/10 so với sáng London."},
+        {l: "best", a: ["L", 8, 15], b: ["L", 10, 30], n: "Sáng London", d: "Khung quen thuộc của GBPJPY: London hay phá vùng range phiên Á, GBP có lực nhất trong ngày. Ưu tiên setup A/B."},
+        {l: "good", a: ["N", 8, 45], b: ["L", 16, 30], n: "Giao thoa London – New York", d: "Biên độ giờ lớn nhất ngày, nhưng phần lớn do tin Mỹ đẩy qua GBPUSD và USDJPY. Đi theo xu hướng đã hình thành."},
+        S_.ldnOpen, S_.usData, S_.rollFx, S_.weekOpen
       ],
-      ticks: [{k: "N", h: 10, m: 30, n: "Tồn kho dầu EIA (thứ Tư)", days: [3]}, {k: "N", h: 13, m: 0, n: "Số giàn khoan Baker Hughes (thứ Sáu)", days: [5]}, {k: "N", h: 14, m: 30, n: "Chốt giá NYMEX"}, {k: "N", h: 16, m: 30, n: "Tồn kho dầu API (thứ Ba)", days: [2]}],
-      drivers: "Tồn kho EIA/API, quyết định OPEC+, địa chính trị Trung Đông, USD.",
-      tip: "Giờ chính sàn NYMEX có thanh khoản tốt nhất. Tránh tin tồn kho EIA chiều thứ Tư."}
+      ticks: [{k: "T", h: 8, m: 30, n: "Dữ liệu Nhật (CPI, việc làm…)"}, {k: "T", h: 9, m: 55, n: "Giá fix Tokyo"}, {k: "T", h: 12, m: 0, n: "BoJ công bố (ngày họp, giờ không cố định)"}, {k: "L", h: 7, m: 0, n: "ONS: CPI, việc làm, GDP Anh"}, {k: "L", h: 12, m: 0, n: "BoE công bố lãi suất (ngày họp)"}],
+      drivers: "Chênh lệch lãi suất BoE – BoJ, tâm lý rủi ro toàn cầu, dữ liệu Anh và Nhật.",
+      tip: "Biến động mạnh nhất trong các cặp tiền ở đây: biên độ ngày khoảng 120–135 pip, gấp khoảng 1,25 lần EURJPY. SL theo cấu trúc thường rộng hơn, nên tính khối lượng theo SL để rủi ro mỗi lệnh không đổi."}
   ];
   const LV = {
     best: {name: "Tốt nhất", k: "go"}, good: {name: "Tốt", k: "go"}, warn: {name: "Hạn chế", k: "warn"},
