@@ -156,6 +156,11 @@ button,select,input,textarea{font:inherit;color:inherit}
 .cr .num.act.down,.note b.down{color:var(--down)}
 .cr .num.act.eq,.note b.eq{color:var(--amber)}
 .cr .num.act .k{font-weight:400}
+.srcline .lgd{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
+.srcline .lgd i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-left:4px}
+.srcline .lgd i.up{background:var(--up)} .srcline .lgd i.down{background:var(--down)} .srcline .lgd i.eq{background:var(--amber)}
+.det .actn{margin-top:6px;font-weight:600}
+.det .actn.up{color:var(--up)} .det .actn.down{color:var(--down)} .det .actn.eq{color:var(--amber)}
 .cr .num .k{display:none}
 .cr .chev{color:var(--faint);text-align:center;transition:transform .15s}
 .cr[aria-expanded="true"] .chev{transform:rotate(90deg);color:var(--amber)}
