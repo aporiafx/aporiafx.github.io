@@ -171,7 +171,7 @@
     return true;
   }
   const ACT_SRC = {Fed: "Fed (thông cáo FOMC)", BLS: "Cục Thống kê Lao động Mỹ (BLS)", ECB: "Ngân hàng Trung ương châu Âu (ECB)",
-    BoE: "Ngân hàng Trung ương Anh (BoE)", ONS: "Văn phòng Thống kê Anh (ONS)", RBA: "Ngân hàng Dự trữ Úc (RBA)"};
+    BoE: "Ngân hàng Trung ương Anh (BoE)", ONS: "Văn phòng Thống kê Anh (ONS)", RBA: "Ngân hàng Dự trữ Úc (RBA)", BEA: "Cục Phân tích Kinh tế Mỹ (BEA)"};
   function detail(e){
     const x = infoFor(e);
     const C = (s) => s.replace(/\{C\}/g, e.ccy);
