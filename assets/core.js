@@ -495,13 +495,13 @@
      Header, footer, live ticker
      ========================================================= */
   const PAGES = [["lich", "./", "Lịch tin"], ["thi-truong", "thi-truong.html", "Thị trường"], ["gio", "gio-giao-dich.html", "Giờ giao dịch"], ["tin", "tin-tuc.html", "Tin tức"]];
-  const LOGO = '<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#12161c"/><circle cx="16" cy="16" r="9.5" fill="none" stroke="#f5a524" stroke-width="3" stroke-linecap="round" stroke-dasharray="44 15.7" transform="rotate(3 16 16)"/><circle cx="16" cy="16" r="2.6" fill="#f5a524"/></svg>';
+  const LOGO = '<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="2" fill="#141414"/><circle cx="16" cy="16" r="9.5" fill="none" stroke="#ffa31a" stroke-width="3" stroke-linecap="round" stroke-dasharray="44 15.7" transform="rotate(3 16 16)"/><circle cx="16" cy="16" r="2.6" fill="#ffa31a"/></svg>';
   function buildHeader(){
     const page = document.body.getAttribute("data-page") || "";
     const top = $("top");
     if (!top) return;
     top.innerHTML = '<div class="tb"><a class="brand" href="./" aria-label="Aporia, về trang lịch tin">' + LOGO + '<span class="wm">APORIA</span></a>'
-      + '<nav class="nav" aria-label="Mục chính">' + PAGES.map(([k, href, name]) => '<a href="' + href + '"' + (k === page ? ' aria-current="page"' : "") + ">" + name + "</a>").join("") + "</nav>"
+      + '<nav class="nav" aria-label="Mục chính">' + PAGES.map(([k, href, name], i) => '<a href="' + href + '" title="Phím tắt: ' + (i + 1) + '" aria-keyshortcuts="' + (i + 1) + '"' + (k === page ? ' aria-current="page"' : "") + '><span class="fk" aria-hidden="true">' + (i + 1) + ")</span>" + name + "</a>").join("") + "</nav>"
       + '<div class="spacer"></div><div class="clocks" id="wcs" aria-label="Giờ các thị trường"></div>'
       + '<div class="clock"><span class="t" id="clk">--:--:--</span><span class="d" id="clkd">giờ Việt Nam</span></div></div>'
       + '<div class="sb2"><div class="status" id="st" title="Khung giờ giao dịch của mã đang theo dõi"><span class="dot"></span><select class="sel" id="focus" aria-label="Mã theo dõi"></select><span class="lab" id="stLab">—</span><span class="cd" id="stCd"></span></div><div class="nxt" id="nxt"></div></div>';
@@ -509,6 +509,16 @@
     sel.innerHTML = INSTR.map((x) => '<option value="' + x.id + '">' + x.code + "</option>").join("");
     sel.value = focus;
     sel.addEventListener("change", () => setFocus(sel.value));
+    /* Menu keys, terminal style: 1–4 open the pages (ignored while typing in a field or with Ctrl/Alt/Cmd). */
+    document.addEventListener("keydown", (e) => {
+      if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      const n = ["1", "2", "3", "4"].indexOf(e.key);
+      const t = e.target;
+      if (n < 0 || (t && (t.isContentEditable || /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)))) return;
+      if (PAGES[n][0] === page) return;
+      e.preventDefault();
+      location.href = PAGES[n][1];
+    });
     if ("ResizeObserver" in window){
       new ResizeObserver(() => {
         const sticky = getComputedStyle(top).position === "sticky";
