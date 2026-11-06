@@ -214,7 +214,7 @@ button,select,input,textarea{font:inherit;color:inherit}
 .det .eff{color:var(--amber-2)}
 .det .meta{grid-column:1 / -1;display:flex;gap:4px 18px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--dim);border-top:1px solid var(--rule);padding-top:8px}
 @media (max-width: 760px){
-  .calbar .wk{flex:1;min-width:0}
+  .calbar .wk{flex:1;min-width:24ch}
   .calbar .t{display:none}
   .calbar .sp{display:none}
   .ftog{display:inline-flex}
